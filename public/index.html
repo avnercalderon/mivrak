@@ -245,7 +245,8 @@ textarea:focus{border-color:var(--accent)}
 <script>
 'use strict';
 /* ============================== configuration ============================== */
-const VERSION = '1.0';
+const VERSION = '1.1';
+const DEFAULTS_VERSION = 2; // bump when DEFAULT_SOURCES changes; stored lists are merged on next load
 const CHANNELS = [
   { id: 'all',   name: 'הכול' },
   { id: 'il',    name: 'ישראל' },
@@ -264,14 +265,14 @@ const DEFAULT_SOURCES = [
   { id:'ynet',       name:'ynet',                url:'https://www.ynet.co.il/Integration/StoryRss2.xml', ch:'il', lang:'he' },
   { id:'walla',      name:'וואלה חדשות',          url:'https://rss.walla.co.il/feed/1', ch:'il', lang:'he' },
   { id:'walla-brk',  name:'וואלה מבזקים',         url:'https://rss.walla.co.il/feed/22', ch:'il', lang:'he' },
-  { id:'iht',        name:'ישראל היום',           url:'https://www.israelhayom.co.il/rss.xml', ch:'il', lang:'he' },
-  { id:'maariv',     name:'מעריב',                url:'https://www.maariv.co.il/Rss/RssFeedsMivzakiChadashot', ch:'il', lang:'he' },
+  { id:'iht',        name:'ישראל היום',           url:GN_HE('site:israelhayom.co.il'), ch:'il', lang:'he' },
+  { id:'maariv',     name:'מעריב',                url:GN_HE('site:maariv.co.il'), ch:'il', lang:'he' },
   { id:'inn',        name:'ערוץ 7',               url:'https://www.inn.co.il/Rss.aspx', ch:'il', lang:'he' },
   { id:'haaretz',    name:'הארץ',                 url:GN_HE('site:haaretz.co.il'), ch:'il', lang:'he' },
   { id:'kan',        name:'כאן חדשות',            url:GN_HE('site:kan.org.il'), ch:'il', lang:'he' },
   { id:'n12',        name:'N12',                  url:GN_HE('site:mako.co.il'), ch:'il', lang:'he' },
   { id:'gn-il',      name:'Google News ישראל',    url:'https://news.google.com/rss?hl=he&gl=IL&ceid=IL:he', ch:'il', lang:'he' },
-  { id:'toi',        name:'Times of Israel',      url:'https://www.timesofisrael.com/feed', ch:'il', lang:'en' },
+  { id:'toi',        name:'Times of Israel',      url:GN_EN('site:timesofisrael.com'), ch:'il', lang:'en' },
   { id:'jpost',      name:'Jerusalem Post',       url:'https://www.jpost.com/rss/rssfeedsfrontpage.aspx', ch:'il', lang:'en' },
   { id:'ynetnews',   name:'Ynetnews',             url:'https://www.ynetnews.com/Integration/StoryRss3082.xml', ch:'il', lang:'en' },
   { id:'i24',        name:'i24NEWS',              url:GN_EN('site:i24news.tv'), ch:'il', lang:'en' },
@@ -284,7 +285,7 @@ const DEFAULT_SOURCES = [
   { id:'cnn',        name:'CNN',                  url:'http://rss.cnn.com/rss/edition_world.rss', ch:'world', lang:'en' },
   { id:'aljaz',      name:'Al Jazeera',           url:'https://www.aljazeera.com/xml/rss/all.xml', ch:'world', lang:'en' },
   { id:'npr',        name:'NPR',                  url:'https://feeds.npr.org/1001/rss.xml', ch:'world', lang:'en' },
-  { id:'dw',         name:'DW',                   url:'https://rss.dw.com/rdf/rdf-en-all', ch:'world', lang:'en' },
+  { id:'dw',         name:'DW',                   url:GN_EN('site:dw.com'), ch:'world', lang:'en' },
   { id:'f24',        name:'France 24',            url:'https://www.france24.com/en/rss', ch:'world', lang:'en' },
   { id:'wapo',       name:'Washington Post',      url:'https://feeds.washingtonpost.com/rss/world', ch:'world', lang:'en' },
   { id:'sky',        name:'Sky News',             url:'https://feeds.skynews.com/feeds/rss/world.xml', ch:'world', lang:'en' },
@@ -299,9 +300,9 @@ const DEFAULT_SOURCES = [
   { id:'simpleflying',name:'Simple Flying',       url:'https://simpleflying.com/feed/', ch:'avi', pro:true, lang:'en' },
   { id:'avweb',      name:'AVweb',                url:'https://www.avweb.com/feed/', ch:'avi', pro:true, lang:'en' },
   { id:'aerotime',   name:'AeroTime',             url:'https://www.aerotime.aero/feed', ch:'avi', pro:true, lang:'en' },
-  { id:'airways',    name:'Airways',              url:'https://airwaysmag.com/feed/', ch:'avi', pro:true, lang:'en' },
+  { id:'airways',    name:'Airways',              url:GN_EN('site:airwaysmag.com'), ch:'avi', pro:true, lang:'en' },
   { id:'fr24',       name:'Flightradar24 Blog',   url:'https://www.flightradar24.com/blog/feed/', ch:'avi', pro:true, lang:'en' },
-  { id:'rgn',        name:'Runway Girl Network',  url:'https://runwaygirlnetwork.com/feed/', ch:'avi', pro:true, lang:'en' },
+  { id:'rgn',        name:'Runway Girl Network',  url:GN_EN('site:runwaygirlnetwork.com'), ch:'avi', pro:true, lang:'en' },
   { id:'av24',       name:'Aviation24.be',        url:'https://www.aviation24.be/feed/', ch:'avi', pro:true, lang:'en' },
   { id:'nats',       name:'NATS Blog',            url:'https://nats.aero/blog/feed/', ch:'avi', pro:true, lang:'en' },
   { id:'avweek',     name:'Aviation Week',        url:GN_EN('site:aviationweek.com'), ch:'avi', pro:true, lang:'en' },
@@ -332,12 +333,12 @@ const DEFAULT_SOURCES = [
   { id:'9to5',       name:'9to5Mac',              url:'https://9to5mac.com/feed/', ch:'tech', lang:'en' },
   { id:'register',   name:'The Register',         url:'https://www.theregister.com/headlines.atom', ch:'tech', pro:true, lang:'en' },
   { id:'ai-news',    name:'AI (חיפוש)',            url:GN_EN('"artificial intelligence" OR OpenAI OR Anthropic OR "AI model"'), ch:'tech', lang:'en' },
-  { id:'geektime',   name:'גיקטיים',              url:'https://www.geektime.co.il/feed/', ch:'tech', lang:'he' },
+  { id:'geektime',   name:'גיקטיים',              url:GN_HE('site:geektime.co.il'), ch:'tech', lang:'he' },
   { id:'ctech',      name:'CTech',                url:GN_EN('site:calcalistech.com'), ch:'tech', lang:'en' },
   { id:'gn-tech-he', name:'Google News טכנולוגיה', url:'https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=he&gl=IL&ceid=IL:he', ch:'tech', lang:'he' },
   // ---------- ספורט ----------
   { id:'bbc-sport',  name:'BBC Sport',            url:'https://feeds.bbci.co.uk/sport/rss.xml', ch:'sport', lang:'en' },
-  { id:'espn',       name:'ESPN',                 url:'https://www.espn.com/espn/rss/news', ch:'sport', lang:'en' },
+  { id:'espn',       name:'ESPN',                 url:GN_EN('site:espn.com'), ch:'sport', lang:'en' },
   { id:'skysports',  name:'Sky Sports',           url:'https://www.skysports.com/rss/12040', ch:'sport', lang:'en' },
   { id:'guard-sport',name:'Guardian Sport',       url:'https://www.theguardian.com/uk/sport/rss', ch:'sport', lang:'en' },
   { id:'ynet-sport', name:'ynet ספורט',           url:'https://www.ynet.co.il/Integration/StoryRss3.xml', ch:'sport', lang:'he' },
@@ -347,7 +348,7 @@ const DEFAULT_SOURCES = [
   { id:'gn-sport-he',name:'Google News ספורט',    url:'https://news.google.com/rss/headlines/section/topic/SPORTS?hl=he&gl=IL&ceid=IL:he', ch:'sport', lang:'he' },
   // ---------- כלכלה ----------
   { id:'globes',     name:'גלובס',                url:'https://www.globes.co.il/webservice/rss/rssfeeder.asmx/FeederNode?iID=585', ch:'econ', lang:'he' },
-  { id:'calcalist',  name:'כלכליסט',              url:'https://www.calcalist.co.il/GeneralRSS/0,16335,L-8,00.xml', ch:'econ', lang:'he' },
+  { id:'calcalist',  name:'כלכליסט',              url:GN_HE('site:calcalist.co.il'), ch:'econ', lang:'he' },
   { id:'themarker',  name:'TheMarker',            url:GN_HE('site:themarker.com'), ch:'econ', lang:'he' },
   { id:'bizportal',  name:'ביזפורטל',             url:GN_HE('site:bizportal.co.il'), ch:'econ', lang:'he' },
   { id:'bbc-biz',    name:'BBC Business',         url:'https://feeds.bbci.co.uk/news/business/rss.xml', ch:'econ', lang:'en' },
@@ -783,6 +784,16 @@ $('q').oninput = () => { query = $('q').value.trim(); renderLimit = 250; renderL
 $('sortHot').onclick = () => { settings.sort='hot'; saveSettings(); $('sortHot').classList.add('on'); $('sortNew').classList.remove('on'); renderList(); };
 $('sortNew').onclick = () => { settings.sort='new'; saveSettings(); $('sortNew').classList.add('on'); $('sortHot').classList.remove('on'); renderList(); };
 $('bPro').onclick = () => { settings.proOnly = !settings.proOnly; saveSettings(); renderTabs(); renderList(); };
+
+// merge updated default sources into a stored list (keeps user-added sources and on/off state)
+(function mergeDefaults(){
+  if (settings.defaultsVersion === DEFAULTS_VERSION) return;
+  const stored = new Map(sources.map(s => [s.id, s]));
+  const merged = DEFAULT_SOURCES.map(d => ({ ...d, on: stored.has(d.id) ? stored.get(d.id).on !== false : true }));
+  for (const s of sources) if (!DEFAULT_SOURCES.some(d => d.id === s.id) && /^u/.test(s.id)) merged.push(s);
+  sources = merged; health = {};
+  settings.defaultsVersion = DEFAULTS_VERSION; saveSources(); saveSettings();
+})();
 
 // boot
 applyTheme();
