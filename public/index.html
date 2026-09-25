@@ -225,7 +225,7 @@ textarea:focus{border-color:var(--accent)}
 
   <div class="sec">
     <h2>מילות מפתח לערוצים</h2>
-    <p>כותרת מכל מקור שמכילה מילה מהרשימה תופיע גם בערוץ הזה. מופרדות בפסיק.</p>
+    <p>כשהמתג דולק, כותרת מכל מקור שמכילה מילה מהרשימה תופיע גם בערוץ. כשהוא כבוי, הערוץ מציג רק את המקורות שלו. מופרדות בפסיק.</p>
     <div id="kwList"></div>
   </div>
 
@@ -245,13 +245,14 @@ textarea:focus{border-color:var(--accent)}
 <script>
 'use strict';
 /* ============================== configuration ============================== */
-const VERSION = '1.2';
-const DEFAULTS_VERSION = 2; // bump when DEFAULT_SOURCES changes; stored lists are merged on next load
+const VERSION = '1.3';
+const DEFAULTS_VERSION = 3; // bump when DEFAULT_SOURCES changes; stored lists are merged on next load
 const CHANNELS = [
   { id: 'all',   name: 'הכול' },
   { id: 'il',    name: 'ישראל' },
   { id: 'world', name: 'עולם' },
   { id: 'avi',   name: 'תעופה' },
+  { id: 'atc',   name: 'בקרה אווירית' },
   { id: 'tech',  name: 'טכנולוגיה' },
   { id: 'sport', name: 'ספורט' },
   { id: 'econ',  name: 'כלכלה' },
@@ -304,24 +305,30 @@ const DEFAULT_SOURCES = [
   { id:'fr24',       name:'Flightradar24 Blog',   url:'https://www.flightradar24.com/blog/feed/', ch:'avi', pro:true, lang:'en' },
   { id:'rgn',        name:'Runway Girl Network',  url:GN_EN('site:runwaygirlnetwork.com'), ch:'avi', pro:true, lang:'en' },
   { id:'av24',       name:'Aviation24.be',        url:'https://www.aviation24.be/feed/', ch:'avi', pro:true, lang:'en' },
-  { id:'nats',       name:'NATS Blog',            url:'https://nats.aero/blog/feed/', ch:'avi', pro:true, lang:'en' },
+  { id:'nats',       name:'NATS Blog',            url:'https://nats.aero/blog/feed/', ch:'atc', pro:true, lang:'en' },
   { id:'avweek',     name:'Aviation Week',        url:GN_EN('site:aviationweek.com'), ch:'avi', pro:true, lang:'en' },
   { id:'flightglobal',name:'FlightGlobal',        url:GN_EN('site:flightglobal.com'), ch:'avi', pro:true, lang:'en' },
   { id:'avherald',   name:'Aviation Herald',      url:GN_EN('site:avherald.com'), ch:'avi', pro:true, lang:'en' },
   { id:'ain',        name:'AIN',                  url:GN_EN('site:ainonline.com'), ch:'avi', pro:true, lang:'en' },
   { id:'aircurrent', name:'The Air Current',      url:GN_EN('site:theaircurrent.com'), ch:'avi', pro:true, lang:'en' },
-  { id:'easa',       name:'EASA',                 url:GN_EN('EASA aviation'), ch:'avi', pro:true, lang:'en' },
-  { id:'eurocontrol',name:'Eurocontrol',          url:GN_EN('Eurocontrol'), ch:'avi', pro:true, lang:'en' },
-  { id:'icao',       name:'ICAO',                 url:GN_EN('ICAO'), ch:'avi', pro:true, lang:'en' },
-  { id:'faa',        name:'FAA',                  url:GN_EN('FAA air traffic'), ch:'avi', pro:true, lang:'en' },
-  { id:'atc-en',     name:'Air traffic control (חיפוש)', url:GN_EN('"air traffic control"'), ch:'avi', pro:true, lang:'en' },
-  { id:'gps-jam',    name:'GPS jamming (חיפוש)',  url:GN_EN('"GPS jamming" OR "GPS spoofing" aircraft'), ch:'avi', pro:true, lang:'en' },
-  { id:'airspace',   name:'Airspace closures (חיפוש)', url:GN_EN('airspace closed OR "airspace closure"'), ch:'avi', pro:true, lang:'en' },
-  { id:'atc-he',     name:'בקרה אווירית (חיפוש)', url:GN_HE('"בקרה אווירית" OR "בקר טיסה" OR "בקרי טיסה"'), ch:'avi', pro:true, lang:'he' },
+  { id:'easa',       name:'EASA',                 url:GN_EN('EASA aviation'), ch:'atc', pro:true, lang:'en' },
+  { id:'eurocontrol',name:'Eurocontrol',          url:GN_EN('Eurocontrol'), ch:'atc', pro:true, lang:'en' },
+  { id:'icao',       name:'ICAO',                 url:GN_EN('ICAO'), ch:'atc', pro:true, lang:'en' },
+  { id:'faa',        name:'FAA',                  url:GN_EN('FAA air traffic'), ch:'atc', pro:true, lang:'en' },
+  { id:'atc-en',     name:'Air traffic control (חיפוש)', url:GN_EN('"air traffic control"'), ch:'atc', pro:true, lang:'en' },
+  { id:'gps-jam',    name:'GPS jamming (חיפוש)',  url:GN_EN('"GPS jamming" OR "GPS spoofing" aircraft'), ch:'atc', pro:true, lang:'en' },
+  { id:'airspace',   name:'Airspace closures (חיפוש)', url:GN_EN('airspace closed OR "airspace closure"'), ch:'atc', pro:true, lang:'en' },
+  { id:'atc-he',     name:'בקרה אווירית (חיפוש)', url:GN_HE('"בקרה אווירית" OR "בקר טיסה" OR "בקרי טיסה"'), ch:'atc', pro:true, lang:'he' },
   { id:'llbg',       name:'נתב"ג (חיפוש)',        url:GN_HE('נתב"ג OR "שדה התעופה בן גוריון"'), ch:'avi', lang:'he' },
-  { id:'iaa',        name:'רשות שדות התעופה (חיפוש)', url:GN_HE('"רשות שדות התעופה"'), ch:'avi', lang:'he' },
+  { id:'iaa',        name:'רשות שדות התעופה (חיפוש)', url:GN_HE('"רשות שדות התעופה"'), ch:'atc', lang:'he' },
   { id:'elal',       name:'אל על (חיפוש)',        url:GN_HE('"אל על" טיסות'), ch:'avi', lang:'he' },
   { id:'avi-he',     name:'תעופה (חיפוש)',        url:GN_HE('תעופה מטוס טיסה'), ch:'avi', lang:'he' },
+  // ---------- בקרה אווירית ----------
+  { id:'atco',       name:'Air traffic controllers (חיפוש)', url:GN_EN('"air traffic controller" OR "air traffic controllers" OR ATCO'), ch:'atc', pro:true, lang:'en' },
+  { id:'canso',      name:'CANSO / SESAR (חיפוש)', url:GN_EN('CANSO OR SESAR OR "Single European Sky" OR IFATCA'), ch:'atc', pro:true, lang:'en' },
+  { id:'ansp',       name:'ANSPs (חיפוש)',        url:GN_EN('"air navigation service" OR ANSP OR "ATC strike" OR "ATC staffing"'), ch:'atc', pro:true, lang:'en' },
+  { id:'incursion',  name:'Separation / incursions (חיפוש)', url:GN_EN('"runway incursion" OR "loss of separation" OR "near collision" aircraft OR "near miss" aircraft'), ch:'atc', pro:true, lang:'en' },
+  { id:'radar',      name:'ATC systems (חיפוש)',  url:GN_EN('"radar outage" OR "ATC system" OR "air traffic control system" OR "ATC outage"'), ch:'atc', pro:true, lang:'en' },
   // ---------- טכנולוגיה ----------
   { id:'verge',      name:'The Verge',            url:'https://www.theverge.com/rss/index.xml', ch:'tech', lang:'en' },
   { id:'ars',        name:'Ars Technica',         url:'https://feeds.arstechnica.com/arstechnica/index', ch:'tech', pro:true, lang:'en' },
@@ -362,7 +369,8 @@ const DEFAULT_SOURCES = [
 const DEFAULT_KEYWORDS = {
   il:    'ישראל, Israel, Israeli, IDF, Gaza, Hezbollah, Hamas, Knesset, Netanyahu, Tel Aviv, Jerusalem, נתניהו, כנסת, צה"ל, חמאס, חיזבאללה, עזה, לבנון, ירושלים, תל אביב, ממשלה, בג"ץ',
   world: 'Ukraine, Russia, China, Trump, Putin, NATO, United Nations, EU, election, Iran, Syria, Egypt, Turkey, אוקראינה, רוסיה, סין, טראמפ, פוטין, נאט"ו, האו"ם, איראן, סוריה, מצרים, טורקיה, בחירות',
-  avi:   'aviation, airline, airlines, aircraft, airport, airports, Boeing, Airbus, pilot, pilots, runway, ATC, air traffic, airspace, Eurocontrol, EASA, ICAO, FAA, drone, El Al, Ryanair, Wizz Air, Lufthansa, easyJet, Emirates, plane crash, emergency landing, GPS jamming, GPS spoofing, TCAS, NOTAM, Flightradar, טיסה, טיסות, תעופה, מטוס, מטוסים, טייס, טייסים, נתב"ג, שדה התעופה, אל על, בקרה אווירית, בקר טיסה, בקרי טיסה, רש"ת, ארקיע, ישראייר, נחיתת חירום, רחפן, כטב"ם, מרחב אווירי',
+  avi:   'aviation, airline, airlines, aircraft, airport, airports, Boeing, Airbus, pilot, pilots, runway, ATC, air traffic, airspace, Eurocontrol, EASA, ICAO, FAA, drone, El Al, Ryanair, Wizz Air, Lufthansa, easyJet, Emirates, plane crash, emergency landing, Flightradar, טיסה, טיסות, תעופה, מטוס נוסעים, טייס, טייסים, נתב"ג, שדה התעופה, אל על, רש"ת, ארקיע, ישראייר, נחיתת חירום',
+  atc:   'air traffic control, air traffic controller, air traffic controllers, ATC, ATCO, Eurocontrol, CANSO, SESAR, IFATCA, NATS, ANSP, air navigation service, airspace closure, airspace closed, NOTAM, TCAS, runway incursion, loss of separation, near miss, GPS jamming, GPS spoofing, radar outage, ATC outage, Single European Sky, בקרה אווירית, בקר טיסה, בקרי טיסה, בקרת טיסה, מרחב אווירי, סגירת המרחב האווירי, שיבוש GPS',
   tech:  'AI, artificial intelligence, OpenAI, Anthropic, ChatGPT, Google, Apple, Microsoft, Nvidia, Meta, iPhone, Android, chip, semiconductor, startup, cyber, cyberattack, hacker, hackers, software, בינה מלאכותית, סטארטאפ, סייבר, אפל, גוגל, מיקרוסופט, אנבידיה, אפליקציה, הייטק',
   sport: 'football, soccer, NBA, NFL, Champions League, Premier League, Euroleague, Maccabi, Hapoel, Olympic, Olympics, tennis, Formula 1, F1, World Cup, כדורגל, כדורסל, מכבי, הפועל, בית"ר, ליגת האלופות, יורוליג, אולימפי, מונדיאל, נבחרת, שחקן',
   econ:  'economy, economic, inflation, interest rate, stock, stocks, markets, Fed, Nasdaq, Wall Street, bitcoin, crypto, GDP, bank, IPO, tariff, tariffs, בורסה, ריבית, אינפלציה, בנק ישראל, מניות, מניה, שקל, דולר, תקציב, כלכלה, משכנתא, ביטקוין, מכסים',
@@ -379,7 +387,9 @@ const LS = {
 };
 let sources  = LS.get('mv_sources', null) || DEFAULT_SOURCES.map(s => ({ ...s, on: true }));
 let keywords = LS.get('mv_keywords', null) || { ...DEFAULT_KEYWORDS };
-let settings = Object.assign({ channel: 'all', sort: 'hot', images: false, theme: 'auto', watch: '', proOnly: false, lastVisit: 0, home: 'all' }, LS.get('mv_settings', {}));
+let settings = Object.assign({ channel: 'all', sort: 'hot', images: false, theme: 'auto', watch: '', proOnly: false, lastVisit: 0, home: 'all', kwOn: null }, LS.get('mv_settings', {}));
+const DEFAULT_KWON = { il:true, world:true, avi:false, atc:false, tech:true, sport:true, econ:true };
+if (!settings.kwOn) settings.kwOn = { ...DEFAULT_KWON };
 let health   = LS.get('mv_health', {});       // id -> { ok, error, at, n }
 let items    = new Map();                     // link -> item
 let clusters = [];
@@ -451,7 +461,7 @@ function channelsOf(it){
   const set = new Set();
   if (src) set.add(src.ch);
   const text = it.t + ' ' + (it.desc||'');
-  for (const ch in kwCache) if (kwCache[ch] && kwCache[ch].test(text)) set.add(ch);
+  for (const ch in kwCache) if (settings.kwOn[ch] !== false && kwCache[ch] && kwCache[ch].test(text)) set.add(ch);
   return set;
 }
 
@@ -515,7 +525,7 @@ function buildClusters(){
 function hotScore(c, channel){
   const ageH = Math.max(0, (Date.now() - c.time) / 3600e3);
   let s = Math.pow(c.n, 0.8) / Math.pow(1 + ageH/2, 1.2);
-  if (channel === 'avi' && c.hasPro) s *= 1.3;
+  if ((channel === 'avi' || channel === 'atc') && c.hasPro) s *= 1.3;
   return s;
 }
 
@@ -525,7 +535,7 @@ function renderTabs(){
   for (const c of clusters) { for (const ch of c.chans) counts[ch] = (counts[ch]||0)+1; counts.all = (counts.all||0)+1; }
   $('tabs').innerHTML = CHANNELS.map(c => `<button class="tab${settings.channel===c.id?' on':''}" data-ch="${c.id}">${c.name}${counts[c.id]?`<b>${counts[c.id]}</b>`:''}</button>`).join('');
   $('tabs').querySelectorAll('.tab').forEach(b => b.onclick = () => { settings.channel = b.dataset.ch; saveSettings(); renderLimit = 250; renderTabs(); renderList(); window.scrollTo(0,0); });
-  $('bPro').style.display = settings.channel === 'avi' ? '' : 'none';
+  $('bPro').style.display = (settings.channel === 'avi' || settings.channel === 'atc') ? '' : 'none';
   $('bPro').classList.toggle('on', settings.proOnly);
 }
 function highlight(t){
@@ -535,7 +545,7 @@ function highlight(t){
 function visibleClusters(){
   const ch = settings.channel;
   let list = clusters.filter(c => ch === 'all' || c.chans.has(ch));
-  if (ch === 'avi' && settings.proOnly) list = list.filter(c => c.hasPro);
+  if ((ch === 'avi' || ch === 'atc') && settings.proOnly) list = list.filter(c => c.hasPro);
   if (query) {
     const q = query.toLowerCase();
     list = list.filter(c => c.items.some(it => (it.t + ' ' + (it.desc||'')).toLowerCase().includes(q)));
@@ -680,7 +690,8 @@ function renderSettings(){
   $('addChan').innerHTML = CHANNELS.filter(c=>c.id!=='all').map(c => `<button data-ch="${c.id}"${c.id===(addState.ch||'world')?' class="on"':''}>${c.name}</button>`).join('');
   $('addChan').querySelectorAll('button').forEach(b => b.onclick = () => { addState.ch = b.dataset.ch; $('addChan').querySelectorAll('button').forEach(x=>x.classList.toggle('on', x===b)); });
   renderSources();
-  $('kwList').innerHTML = CHANNELS.filter(c=>c.id!=='all').map(c => `<div class="kw"><label>${c.name}</label><textarea data-kw="${c.id}" rows="3">${esc(keywords[c.id]||'')}</textarea></div>`).join('');
+  $('kwList').innerHTML = CHANNELS.filter(c=>c.id!=='all').map(c => `<div class="kw"><div class="srow" style="padding:4px 0;min-height:40px"><div class="n"><b>${c.name}</b><small>${settings.kwOn[c.id]!==false ? 'גם כותרות ממקורות של ערוצים אחרים' : 'רק המקורות של הערוץ עצמו'}</small></div><button class="sw${settings.kwOn[c.id]!==false?' on':''}" data-kwon="${c.id}"></button></div><textarea data-kw="${c.id}" rows="3"${settings.kwOn[c.id]===false?' style="opacity:.5"':''}>${esc(keywords[c.id]||'')}</textarea></div>`).join('');
+  $('kwList').querySelectorAll('[data-kwon]').forEach(b => b.onclick = () => { readKeywords(); settings.kwOn[b.dataset.kwon] = settings.kwOn[b.dataset.kwon] === false; saveSettings(); renderSettings(); });
   $('ver').textContent = 'מברק ' + VERSION + ' · ' + sources.length + ' מקורות · ' + items.size + ' כותרות בזיכרון';
 }
 function readKeywords(){
@@ -792,6 +803,9 @@ $('bPro').onclick = () => { settings.proOnly = !settings.proOnly; saveSettings()
   const merged = DEFAULT_SOURCES.map(d => ({ ...d, on: stored.has(d.id) ? stored.get(d.id).on !== false : true }));
   for (const s of sources) if (!DEFAULT_SOURCES.some(d => d.id === s.id) && /^u/.test(s.id)) merged.push(s);
   sources = merged; health = {};
+  for (const ch in DEFAULT_KEYWORDS) if (keywords[ch] == null) keywords[ch] = DEFAULT_KEYWORDS[ch];
+  if ((settings.defaultsVersion || 0) < 3) { keywords.avi = DEFAULT_KEYWORDS.avi; settings.kwOn = { ...DEFAULT_KWON }; }
+  saveKeywords();
   settings.defaultsVersion = DEFAULTS_VERSION; saveSources(); saveSettings();
 })();
 
