@@ -11,9 +11,17 @@ const parser = new XMLParser({
   attributeNamePrefix: '@_',
   textNodeName: '#text',
   parseTagValue: false,
-  processEntities: true,
-  htmlEntities: true,
+  processEntities: false,   // large feeds (Google News, Guardian) exceed the parser's entity limit
+  htmlEntities: false,
 });
+
+const NAMED = { amp:'&', lt:'<', gt:'>', quot:'"', apos:"'", nbsp:' ', ndash:'–', mdash:'—', hellip:'…', rsquo:'’', lsquo:'‘', rdquo:'”', ldquo:'“', copy:'©', reg:'®', trade:'™', euro:'€', pound:'£', shy:'' };
+function decode(s) {
+  return String(s || '')
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
+    .replace(/&([a-z]+);/gi, (m, n) => (n.toLowerCase() in NAMED ? NAMED[n.toLowerCase()] : m));
+}
 
 function txt(v) {
   if (v == null) return '';
@@ -27,22 +35,17 @@ function txt(v) {
 }
 
 function stripHtml(s) {
-  return String(s || '')
+  // entities are decoded twice on purpose: feeds often double-escape HTML inside descriptions
+  return decode(decode(String(s || ''))
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '')
     .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
     .replace(/\s+/g, ' ')
-    .trim();
+    .trim());
 }
 
 function firstImg(html) {
-  const m = /<img[^>]+src=["']([^"']+)["']/i.exec(String(html || ''));
+  const m = /<img[^>]+src=["']([^"']+)["']/i.exec(decode(String(html || '')));
   return m ? m[1] : '';
 }
 
@@ -93,7 +96,7 @@ function normalizeItems(xmlObj, isGoogleNews) {
   for (const it of raw.slice(0, MAX_ITEMS)) {
     if (!it || typeof it !== 'object') continue;
     let title = stripHtml(txt(it.title));
-    let link = it.link ? atomLink(it.link) : '';
+    let link = it.link ? decode(atomLink(it.link)) : '';
     if (!link && it.guid && /^https?:/i.test(txt(it.guid))) link = txt(it.guid);
     if (!link && it.id && /^https?:/i.test(txt(it.id))) link = txt(it.id);
     link = String(link || '').trim();
