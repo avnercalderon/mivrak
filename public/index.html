@@ -245,7 +245,7 @@ textarea:focus{border-color:var(--accent)}
 <script>
 'use strict';
 /* ============================== configuration ============================== */
-const VERSION = '1.1';
+const VERSION = '1.2';
 const DEFAULTS_VERSION = 2; // bump when DEFAULT_SOURCES changes; stored lists are merged on next load
 const CHANNELS = [
   { id: 'all',   name: 'הכול' },
@@ -372,6 +372,7 @@ const STOP = new Set(('the a an of to in on and for is at by with from as it its
   'של על את עם לא זה גם אל מה כי או אם יש בין אחרי לפני נגד מול אצל כל עוד רק היה היו אבל כבר הוא היא הם הן אני אתה כך כמו').split(' '));
 
 /* ============================== state ============================== */
+const $ = (id) => document.getElementById(id);
 const LS = {
   get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { console.warn('storage', e); } },
@@ -409,7 +410,6 @@ function saveCache(){
 }
 
 /* ============================== helpers ============================== */
-const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('on'),2200); }
 function setStamp(at){ $('stamp').textContent = at ? 'עודכן ' + ago(at) : ''; }
