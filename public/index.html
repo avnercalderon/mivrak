@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f3f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f151a" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>מברק</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f6e8c'/><path d='M22 30h56M22 50h56M22 70h36' stroke='white' stroke-width='9' stroke-linecap='round'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f5f7; --panel:#ffffff; --ink:#17212b; --ink2:#5b6773; --line:#dde3e8;
+  --accent:#0f6e8c; --accent-ink:#ffffff; --hot:#b8342a; --new:#0f6e8c; --mark:#ffe58a;
+  --pro:#2a6f4b; --err:#b8342a; --ok:#2a6f4b;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f151a; --panel:#161e25; --ink:#e6ecf0; --ink2:#93a1ad; --line:#26313a;
+    --accent:#4fb3d1; --accent-ink:#0f151a; --hot:#ff7a6e; --new:#4fb3d1; --mark:#5a4d12;
+    --pro:#6ccf9a; --err:#ff7a6e; --ok:#6ccf9a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f151a; --panel:#161e25; --ink:#e6ecf0; --ink2:#93a1ad; --line:#26313a;
+  --accent:#4fb3d1; --accent-ink:#0f151a; --hot:#ff7a6e; --new:#4fb3d1; --mark:#5a4d12;
+  --pro:#6ccf9a; --err:#ff7a6e; --ok:#6ccf9a;
+}
+*{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;font-size:16px;line-height:1.35;-webkit-overflow-scrolling:touch}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0;min-height:44px}
+a{color:inherit;text-decoration:none}
+mark{background:var(--mark);color:inherit;border-radius:2px;padding:0 1px}
+
+/* Header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:6px;padding:8px 12px 4px;max-width:820px;margin:0 auto}
+.brand{font-weight:700;font-size:22px;letter-spacing:-.01em;margin-inline-end:auto;display:flex;align-items:baseline;gap:8px}
+.brand small{font-weight:400;font-size:12px;color:var(--ink2)}
+.ib{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;color:var(--ink2)}
+.ib:active{background:var(--line)}
+.ib svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ib.on{color:var(--accent)}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:2px 12px 8px;max-width:820px;margin:0 auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;padding:0 14px;height:36px;min-height:36px;border-radius:18px;border:1px solid var(--line);background:var(--panel);font-weight:500;font-size:14px;color:var(--ink2);white-space:nowrap}
+.tab.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab b{font-weight:500;opacity:.7;margin-inline-start:4px;font-size:12px}
+.sub{display:flex;align-items:center;gap:8px;padding:0 12px 8px;max-width:820px;margin:0 auto;font-size:13px;color:var(--ink2);min-height:32px}
+.sub .grow{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{min-height:28px;height:28px;padding:0 10px;font-size:13px;color:var(--ink2);background:var(--panel)}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+.search{padding:0 12px 8px;max-width:820px;margin:0 auto;display:none}
+.search.on{display:block}
+.search input{width:100%;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:0 12px;outline:none}
+.search input:focus{border-color:var(--accent)}
+.prog{height:2px;background:transparent;position:relative;overflow:hidden}
+.prog i{position:absolute;inset:0 auto 0 0;right:0;background:var(--accent);width:0;transition:width .3s}
+.prog.busy i{display:block}
+
+/* List */
+.wrap{max-width:820px;margin:0 auto;padding:0 0 60px}
+.pull{height:0;overflow:hidden;text-align:center;font-size:13px;color:var(--ink2);transition:height .15s;line-height:40px}
+.row{display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);align-items:flex-start;background:var(--bg)}
+.row .img{width:64px;height:64px;flex:0 0 64px;border-radius:8px;object-fit:cover;background:var(--line);display:none}
+.row.withimg .img{display:block}
+.row .main{flex:1;min-width:0}
+.row .t{display:block;font-weight:600;font-size:16px;line-height:1.3;color:var(--ink);word-break:break-word}
+.row .t:visited{color:var(--ink)}
+.row.hot .t{font-size:17px}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:5px;font-size:13px;color:var(--ink2);min-height:24px}
+.meta .src{font-weight:500}
+.meta .pro{color:var(--pro);font-size:11px;border:1px solid currentColor;border-radius:4px;padding:0 4px;line-height:16px}
+.meta .new{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--new)}
+.cnt{min-height:24px;height:24px;padding:0 8px;border-radius:12px;background:var(--panel);border:1px solid var(--line);font-size:12px;font-weight:600;color:var(--ink)}
+.cnt.hot{background:var(--hot);color:#fff;border-color:var(--hot)}
+.meta .sh{min-height:24px;height:24px;color:var(--ink2);margin-inline-start:auto;padding:0 4px;display:inline-flex;align-items:center;gap:4px;font-size:12px}
+.meta .sh svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.more{display:none;margin-top:8px;border-inline-start:2px solid var(--line);padding-inline-start:10px;font-size:14px}
+.row.open .more{display:block}
+.more .d{color:var(--ink2);font-size:13px;margin-bottom:6px}
+.more a{display:block;padding:6px 0;border-bottom:1px dashed var(--line)}
+.more a:last-child{border-bottom:0}
+.more a span{color:var(--ink2);font-size:12px;margin-inline-start:6px}
+.empty{padding:40px 20px;text-align:center;color:var(--ink2)}
+.empty b{display:block;color:var(--ink);font-weight:600;margin-bottom:6px}
+.loadmore{display:block;width:calc(100% - 24px);margin:12px;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-weight:500}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:20;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center}
+.toast.on{opacity:1}
+
+/* Settings */
+.sheet{position:fixed;inset:0;background:var(--bg);z-index:10;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-top:env(safe-area-inset-top,0px)}
+.sheet.on{display:block}
+.sheet .bar{border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:2}
+.sheet h1{font-size:18px;font-weight:600;margin:0;margin-inline-end:auto}
+.sec{max-width:820px;margin:0 auto;padding:14px 12px}
+.sec h2{font-size:15px;font-weight:600;margin:0 0 8px}
+.sec p{margin:0 0 10px;font-size:13px;color:var(--ink2)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.srow{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line);min-height:52px}
+.srow:last-child{border-bottom:0}
+.srow .n{flex:1;min-width:0}
+.srow .n b{display:block;font-weight:500;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srow .n small{display:block;color:var(--ink2);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:right}
+.srow .st{font-size:11px;padding:1px 6px;border-radius:4px;border:1px solid var(--line);color:var(--ink2);white-space:nowrap}
+.srow .st.ok{color:var(--ok);border-color:var(--ok)}
+.srow .st.err{color:var(--err);border-color:var(--err)}
+.srow .st.off{opacity:.6}
+.srow .del{color:var(--ink2);width:40px;min-height:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px}
+.srow .del:active{color:var(--err)}
+.sw{position:relative;width:44px;height:26px;border-radius:13px;background:var(--line);flex:0 0 44px;min-height:26px}
+.sw::after{content:"";position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.sw.on{background:var(--accent)}
+.sw.on::after{transform:translateX(-18px)}
+.frow{display:flex;gap:8px;margin-top:8px}
+.frow input,.frow select{flex:1;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:0 12px;outline:none;min-width:0}
+.frow input:focus{border-color:var(--accent)}
+.btn{height:44px;padding:0 16px;border-radius:10px;background:var(--accent);color:var(--accent-ink);font-weight:600;white-space:nowrap}
+.btn.sec2{background:var(--panel);border:1px solid var(--line);color:var(--ink)}
+.btn.danger{background:transparent;border:1px solid var(--err);color:var(--err)}
+.btn:disabled{opacity:.5}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+textarea{width:100%;min-height:80px;border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:10px 12px;font:inherit;font-size:14px;color:inherit;outline:none;resize:vertical}
+textarea:focus{border-color:var(--accent)}
+.kw{margin-bottom:10px}
+.kw label{display:block;font-size:14px;font-weight:500;margin-bottom:4px}
+.found{margin-top:8px}
+.found button{display:block;width:100%;text-align:start;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);margin-bottom:6px;font-size:14px}
+.found button small{display:block;color:var(--ink2);direction:ltr;text-align:right;font-size:12px}
+.chip-sel{display:flex;flex-wrap:wrap;gap:6px}
+.chip-sel button{min-height:32px;height:32px;padding:0 12px;border-radius:16px;border:1px solid var(--line);background:var(--panel);font-size:13px}
+.chip-sel button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.hint{font-size:12px;color:var(--ink2);margin-top:6px}
+
+@media (max-width:600px){
+  body{font-size:15px}
+  .brand{font-size:20px}
+  .row{padding:9px 10px}
+  .row .t{font-size:15px}
+  .row.hot .t{font-size:16px}
+  .btn{width:100%}
+  .frow{flex-direction:column}
+  .frow .btn{width:100%}
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+</head>
+<body>
+
+<div class="top" id="top">
+  <div class="bar">
+    <div class="brand">מברק <small id="stamp"></small></div>
+    <button class="ib" id="bSearch" aria-label="חיפוש"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+    <button class="ib" id="bRefresh" aria-label="רענון"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg></button>
+    <button class="ib" id="bSettings" aria-label="הגדרות"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div class="search" id="searchBox"><input id="q" type="search" placeholder="חיפוש בכותרות…" autocomplete="off"></div>
+  <div class="sub">
+    <span class="grow" id="status"></span>
+    <button class="tab" id="bPro" style="display:none;height:28px;min-height:28px;font-size:12px;padding:0 10px">מקצועי בלבד</button>
+    <div class="seg"><button id="sortHot" class="on">חם</button><button id="sortNew">חדש</button></div>
+  </div>
+  <div class="prog" id="prog"><i></i></div>
+</div>
+
+<div class="wrap">
+  <div class="pull" id="pull">משוך לרענון</div>
+  <div id="list"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Settings sheet -->
+<div class="sheet" id="sheet">
+  <div class="bar">
+    <h1>הגדרות</h1>
+    <button class="ib" id="bClose" aria-label="סגור"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+
+  <div class="sec">
+    <h2>תצוגה</h2>
+    <div class="card">
+      <div class="srow"><div class="n"><b>תמונות בכותרות</b><small>איטי יותר בסלולר</small></div><button class="sw" id="swImg" aria-label="תמונות"></button></div>
+      <div class="srow"><div class="n"><b>מצב כהה</b><small>אוטומטי לפי המכשיר, או קבוע</small></div>
+        <div class="seg"><button data-th="auto">אוטו</button><button data-th="light">בהיר</button><button data-th="dark">כהה</button></div></div>
+      <div class="srow"><div class="n"><b>ערוץ פתיחה</b></div><select id="selHome" style="height:36px;border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:0 8px"></select></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>מילות מעקב</h2>
+    <p>כותרות שמכילות אחת מהמילים יודגשו בצהוב. מילה בכל שורה או מופרדות בפסיק.</p>
+    <textarea id="watch" placeholder="LLBG&#10;GPS jamming&#10;Eurocontrol"></textarea>
+  </div>
+
+  <div class="sec">
+    <h2>הוספת מקור</h2>
+    <p>הדבק כתובת של אתר או של פיד RSS. האפליקציה תחפש את הפיד לבד.</p>
+    <div class="frow"><input id="addUrl" type="url" placeholder="https://example.com" inputmode="url" dir="ltr"><button class="btn" id="bFind">חפש פיד</button></div>
+    <div class="found" id="found"></div>
+    <div id="addForm" style="display:none;margin-top:10px">
+      <div class="frow"><input id="addName" type="text" placeholder="שם המקור"></div>
+      <div style="margin-top:8px"><div class="hint" style="margin-bottom:4px">ערוץ ראשי</div><div class="chip-sel" id="addChan"></div></div>
+      <div class="srow" style="padding:8px 0"><div class="n"><b>מקור מקצועי</b><small>מסומן "מקצועי" ומקבל עדיפות בערוץ שלו</small></div><button class="sw" id="swAddPro"></button></div>
+      <div class="btns"><button class="btn" id="bAdd">הוסף מקור</button><button class="btn sec2" id="bCancelAdd">ביטול</button></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>מקורות <span id="srcCount" style="font-weight:400;color:var(--ink2);font-size:13px"></span></h2>
+    <p>כיבוי משאיר את המקור ברשימה בלי לשאוב אותו. מקור שנכשל מסומן באדום עם הסיבה.</p>
+    <div id="srcList"></div>
+  </div>
+
+  <div class="sec">
+    <h2>מילות מפתח לערוצים</h2>
+    <p>כותרת מכל מקור שמכילה מילה מהרשימה תופיע גם בערוץ הזה. מופרדות בפסיק.</p>
+    <div id="kwList"></div>
+  </div>
+
+  <div class="sec">
+    <h2>גיבוי ושחזור</h2>
+    <p>ההגדרות נשמרות רק במכשיר הזה. ייצוא נותן קובץ להעברה למכשיר אחר.</p>
+    <div class="btns">
+      <button class="btn sec2" id="bExport">ייצוא הגדרות</button>
+      <button class="btn sec2" id="bImport">ייבוא הגדרות</button>
+      <input type="file" id="fileImport" accept="application/json" style="display:none">
+      <button class="btn danger" id="bReset">שחזור רשימת המקורות המקורית</button>
+    </div>
+  </div>
+  <div class="sec"><p id="ver"></p></div>
+</div>
+
+<script>
+'use strict';
+/* ============================== configuration ============================== */
+const VERSION = '1.0';
+const CHANNELS = [
+  { id: 'all',   name: 'הכול' },
+  { id: 'il',    name: 'ישראל' },
+  { id: 'world', name: 'עולם' },
+  { id: 'avi',   name: 'תעופה' },
+  { id: 'tech',  name: 'טכנולוגיה' },
+  { id: 'sport', name: 'ספורט' },
+  { id: 'econ',  name: 'כלכלה' },
+];
+const GN_HE = (q) => 'https://news.google.com/rss/search?q=' + encodeURIComponent(q) + '&hl=he&gl=IL&ceid=IL:he';
+const GN_EN = (q) => 'https://news.google.com/rss/search?q=' + encodeURIComponent(q) + '&hl=en-US&gl=US&ceid=US:en';
+
+// id, name, url, channel, pro?, lang
+const DEFAULT_SOURCES = [
+  // ---------- ישראל ----------
+  { id:'ynet',       name:'ynet',                url:'https://www.ynet.co.il/Integration/StoryRss2.xml', ch:'il', lang:'he' },
+  { id:'walla',      name:'וואלה חדשות',          url:'https://rss.walla.co.il/feed/1', ch:'il', lang:'he' },
+  { id:'walla-brk',  name:'וואלה מבזקים',         url:'https://rss.walla.co.il/feed/22', ch:'il', lang:'he' },
+  { id:'iht',        name:'ישראל היום',           url:'https://www.israelhayom.co.il/rss.xml', ch:'il', lang:'he' },
+  { id:'maariv',     name:'מעריב',                url:'https://www.maariv.co.il/Rss/RssFeedsMivzakiChadashot', ch:'il', lang:'he' },
+  { id:'inn',        name:'ערוץ 7',               url:'https://www.inn.co.il/Rss.aspx', ch:'il', lang:'he' },
+  { id:'haaretz',    name:'הארץ',                 url:GN_HE('site:haaretz.co.il'), ch:'il', lang:'he' },
+  { id:'kan',        name:'כאן חדשות',            url:GN_HE('site:kan.org.il'), ch:'il', lang:'he' },
+  { id:'n12',        name:'N12',                  url:GN_HE('site:mako.co.il'), ch:'il', lang:'he' },
+  { id:'gn-il',      name:'Google News ישראל',    url:'https://news.google.com/rss?hl=he&gl=IL&ceid=IL:he', ch:'il', lang:'he' },
+  { id:'toi',        name:'Times of Israel',      url:'https://www.timesofisrael.com/feed', ch:'il', lang:'en' },
+  { id:'jpost',      name:'Jerusalem Post',       url:'https://www.jpost.com/rss/rssfeedsfrontpage.aspx', ch:'il', lang:'en' },
+  { id:'ynetnews',   name:'Ynetnews',             url:'https://www.ynetnews.com/Integration/StoryRss3082.xml', ch:'il', lang:'en' },
+  { id:'i24',        name:'i24NEWS',              url:GN_EN('site:i24news.tv'), ch:'il', lang:'en' },
+  // ---------- עולם ----------
+  { id:'bbc-world',  name:'BBC World',            url:'https://feeds.bbci.co.uk/news/world/rss.xml', ch:'world', lang:'en' },
+  { id:'bbc-top',    name:'BBC News',             url:'https://feeds.bbci.co.uk/news/rss.xml', ch:'world', lang:'en' },
+  { id:'guardian',   name:'The Guardian',         url:'https://www.theguardian.com/world/rss', ch:'world', lang:'en' },
+  { id:'nyt-world',  name:'NYT World',            url:'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', ch:'world', lang:'en' },
+  { id:'nyt-home',   name:'NYT',                  url:'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml', ch:'world', lang:'en' },
+  { id:'cnn',        name:'CNN',                  url:'http://rss.cnn.com/rss/edition_world.rss', ch:'world', lang:'en' },
+  { id:'aljaz',      name:'Al Jazeera',           url:'https://www.aljazeera.com/xml/rss/all.xml', ch:'world', lang:'en' },
+  { id:'npr',        name:'NPR',                  url:'https://feeds.npr.org/1001/rss.xml', ch:'world', lang:'en' },
+  { id:'dw',         name:'DW',                   url:'https://rss.dw.com/rdf/rdf-en-all', ch:'world', lang:'en' },
+  { id:'f24',        name:'France 24',            url:'https://www.france24.com/en/rss', ch:'world', lang:'en' },
+  { id:'wapo',       name:'Washington Post',      url:'https://feeds.washingtonpost.com/rss/world', ch:'world', lang:'en' },
+  { id:'sky',        name:'Sky News',             url:'https://feeds.skynews.com/feeds/rss/world.xml', ch:'world', lang:'en' },
+  { id:'indep',      name:'The Independent',      url:'https://www.independent.co.uk/news/world/rss', ch:'world', lang:'en' },
+  { id:'politico',   name:'Politico Europe',      url:'https://www.politico.eu/feed/', ch:'world', lang:'en' },
+  { id:'almon',      name:'Al-Monitor',           url:'https://www.al-monitor.com/rss', ch:'world', lang:'en' },
+  { id:'reuters',    name:'Reuters',              url:GN_EN('site:reuters.com'), ch:'world', lang:'en' },
+  { id:'ap',         name:'AP',                   url:GN_EN('site:apnews.com'), ch:'world', lang:'en' },
+  { id:'gn-world',   name:'Google News World',    url:'https://news.google.com/rss/headlines/section/topic/WORLD?hl=en-US&gl=US&ceid=US:en', ch:'world', lang:'en' },
+  { id:'gn-world-he',name:'Google News עולם',     url:'https://news.google.com/rss/headlines/section/topic/WORLD?hl=he&gl=IL&ceid=IL:he', ch:'world', lang:'he' },
+  // ---------- תעופה ----------
+  { id:'simpleflying',name:'Simple Flying',       url:'https://simpleflying.com/feed/', ch:'avi', pro:true, lang:'en' },
+  { id:'avweb',      name:'AVweb',                url:'https://www.avweb.com/feed/', ch:'avi', pro:true, lang:'en' },
+  { id:'aerotime',   name:'AeroTime',             url:'https://www.aerotime.aero/feed', ch:'avi', pro:true, lang:'en' },
+  { id:'airways',    name:'Airways',              url:'https://airwaysmag.com/feed/', ch:'avi', pro:true, lang:'en' },
+  { id:'fr24',       name:'Flightradar24 Blog',   url:'https://www.flightradar24.com/blog/feed/', ch:'avi', pro:true, lang:'en' },
+  { id:'rgn',        name:'Runway Girl Network',  url:'https://runwaygirlnetwork.com/feed/', ch:'avi', pro:true, lang:'en' },
+  { id:'av24',       name:'Aviation24.be',        url:'https://www.aviation24.be/feed/', ch:'avi', pro:true, lang:'en' },
+  { id:'nats',       name:'NATS Blog',            url:'https://nats.aero/blog/feed/', ch:'avi', pro:true, lang:'en' },
+  { id:'avweek',     name:'Aviation Week',        url:GN_EN('site:aviationweek.com'), ch:'avi', pro:true, lang:'en' },
+  { id:'flightglobal',name:'FlightGlobal',        url:GN_EN('site:flightglobal.com'), ch:'avi', pro:true, lang:'en' },
+  { id:'avherald',   name:'Aviation Herald',      url:GN_EN('site:avherald.com'), ch:'avi', pro:true, lang:'en' },
+  { id:'ain',        name:'AIN',                  url:GN_EN('site:ainonline.com'), ch:'avi', pro:true, lang:'en' },
+  { id:'aircurrent', name:'The Air Current',      url:GN_EN('site:theaircurrent.com'), ch:'avi', pro:true, lang:'en' },
+  { id:'easa',       name:'EASA',                 url:GN_EN('EASA aviation'), ch:'avi', pro:true, lang:'en' },
+  { id:'eurocontrol',name:'Eurocontrol',          url:GN_EN('Eurocontrol'), ch:'avi', pro:true, lang:'en' },
+  { id:'icao',       name:'ICAO',                 url:GN_EN('ICAO'), ch:'avi', pro:true, lang:'en' },
+  { id:'faa',        name:'FAA',                  url:GN_EN('FAA air traffic'), ch:'avi', pro:true, lang:'en' },
+  { id:'atc-en',     name:'Air traffic control (חיפוש)', url:GN_EN('"air traffic control"'), ch:'avi', pro:true, lang:'en' },
+  { id:'gps-jam',    name:'GPS jamming (חיפוש)',  url:GN_EN('"GPS jamming" OR "GPS spoofing" aircraft'), ch:'avi', pro:true, lang:'en' },
+  { id:'airspace',   name:'Airspace closures (חיפוש)', url:GN_EN('airspace closed OR "airspace closure"'), ch:'avi', pro:true, lang:'en' },
+  { id:'atc-he',     name:'בקרה אווירית (חיפוש)', url:GN_HE('"בקרה אווירית" OR "בקר טיסה" OR "בקרי טיסה"'), ch:'avi', pro:true, lang:'he' },
+  { id:'llbg',       name:'נתב"ג (חיפוש)',        url:GN_HE('נתב"ג OR "שדה התעופה בן גוריון"'), ch:'avi', lang:'he' },
+  { id:'iaa',        name:'רשות שדות התעופה (חיפוש)', url:GN_HE('"רשות שדות התעופה"'), ch:'avi', lang:'he' },
+  { id:'elal',       name:'אל על (חיפוש)',        url:GN_HE('"אל על" טיסות'), ch:'avi', lang:'he' },
+  { id:'avi-he',     name:'תעופה (חיפוש)',        url:GN_HE('תעופה מטוס טיסה'), ch:'avi', lang:'he' },
+  // ---------- טכנולוגיה ----------
+  { id:'verge',      name:'The Verge',            url:'https://www.theverge.com/rss/index.xml', ch:'tech', lang:'en' },
+  { id:'ars',        name:'Ars Technica',         url:'https://feeds.arstechnica.com/arstechnica/index', ch:'tech', pro:true, lang:'en' },
+  { id:'tc',         name:'TechCrunch',           url:'https://techcrunch.com/feed/', ch:'tech', lang:'en' },
+  { id:'wired',      name:'Wired',                url:'https://www.wired.com/feed/rss', ch:'tech', lang:'en' },
+  { id:'hn',         name:'Hacker News',          url:'https://hnrss.org/frontpage', ch:'tech', pro:true, lang:'en' },
+  { id:'mittr',      name:'MIT Technology Review',url:'https://www.technologyreview.com/feed/', ch:'tech', pro:true, lang:'en' },
+  { id:'engadget',   name:'Engadget',             url:'https://www.engadget.com/rss.xml', ch:'tech', lang:'en' },
+  { id:'9to5',       name:'9to5Mac',              url:'https://9to5mac.com/feed/', ch:'tech', lang:'en' },
+  { id:'register',   name:'The Register',         url:'https://www.theregister.com/headlines.atom', ch:'tech', pro:true, lang:'en' },
+  { id:'ai-news',    name:'AI (חיפוש)',            url:GN_EN('"artificial intelligence" OR OpenAI OR Anthropic OR "AI model"'), ch:'tech', lang:'en' },
+  { id:'geektime',   name:'גיקטיים',              url:'https://www.geektime.co.il/feed/', ch:'tech', lang:'he' },
+  { id:'ctech',      name:'CTech',                url:GN_EN('site:calcalistech.com'), ch:'tech', lang:'en' },
+  { id:'gn-tech-he', name:'Google News טכנולוגיה', url:'https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=he&gl=IL&ceid=IL:he', ch:'tech', lang:'he' },
+  // ---------- ספורט ----------
+  { id:'bbc-sport',  name:'BBC Sport',            url:'https://feeds.bbci.co.uk/sport/rss.xml', ch:'sport', lang:'en' },
+  { id:'espn',       name:'ESPN',                 url:'https://www.espn.com/espn/rss/news', ch:'sport', lang:'en' },
+  { id:'skysports',  name:'Sky Sports',           url:'https://www.skysports.com/rss/12040', ch:'sport', lang:'en' },
+  { id:'guard-sport',name:'Guardian Sport',       url:'https://www.theguardian.com/uk/sport/rss', ch:'sport', lang:'en' },
+  { id:'ynet-sport', name:'ynet ספורט',           url:'https://www.ynet.co.il/Integration/StoryRss3.xml', ch:'sport', lang:'he' },
+  { id:'walla-sport',name:'וואלה ספורט',          url:'https://rss.walla.co.il/feed/3', ch:'sport', lang:'he' },
+  { id:'one',        name:'ONE',                  url:GN_HE('site:one.co.il'), ch:'sport', lang:'he' },
+  { id:'sport5',     name:'ספורט 5',              url:GN_HE('site:sport5.co.il'), ch:'sport', lang:'he' },
+  { id:'gn-sport-he',name:'Google News ספורט',    url:'https://news.google.com/rss/headlines/section/topic/SPORTS?hl=he&gl=IL&ceid=IL:he', ch:'sport', lang:'he' },
+  // ---------- כלכלה ----------
+  { id:'globes',     name:'גלובס',                url:'https://www.globes.co.il/webservice/rss/rssfeeder.asmx/FeederNode?iID=585', ch:'econ', lang:'he' },
+  { id:'calcalist',  name:'כלכליסט',              url:'https://www.calcalist.co.il/GeneralRSS/0,16335,L-8,00.xml', ch:'econ', lang:'he' },
+  { id:'themarker',  name:'TheMarker',            url:GN_HE('site:themarker.com'), ch:'econ', lang:'he' },
+  { id:'bizportal',  name:'ביזפורטל',             url:GN_HE('site:bizportal.co.il'), ch:'econ', lang:'he' },
+  { id:'bbc-biz',    name:'BBC Business',         url:'https://feeds.bbci.co.uk/news/business/rss.xml', ch:'econ', lang:'en' },
+  { id:'cnbc',       name:'CNBC',                 url:'https://www.cnbc.com/id/100003114/device/rss/rss.html', ch:'econ', lang:'en' },
+  { id:'guard-biz',  name:'Guardian Business',    url:'https://www.theguardian.com/uk/business/rss', ch:'econ', lang:'en' },
+  { id:'nyt-biz',    name:'NYT Business',         url:'https://rss.nytimes.com/services/xml/rss/nyt/Business.xml', ch:'econ', lang:'en' },
+  { id:'mw',         name:'MarketWatch',          url:'https://feeds.content.dowjones.io/public/rss/mw_topstories', ch:'econ', lang:'en' },
+  { id:'gn-biz-he',  name:'Google News כלכלה',    url:'https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=he&gl=IL&ceid=IL:he', ch:'econ', lang:'he' },
+];
+
+const DEFAULT_KEYWORDS = {
+  il:    'ישראל, Israel, Israeli, IDF, Gaza, Hezbollah, Hamas, Knesset, Netanyahu, Tel Aviv, Jerusalem, נתניהו, כנסת, צה"ל, חמאס, חיזבאללה, עזה, לבנון, ירושלים, תל אביב, ממשלה, בג"ץ',
+  world: 'Ukraine, Russia, China, Trump, Putin, NATO, United Nations, EU, election, Iran, Syria, Egypt, Turkey, אוקראינה, רוסיה, סין, טראמפ, פוטין, נאט"ו, האו"ם, איראן, סוריה, מצרים, טורקיה, בחירות',
+  avi:   'aviation, airline, airlines, aircraft, airport, airports, Boeing, Airbus, pilot, pilots, runway, ATC, air traffic, airspace, Eurocontrol, EASA, ICAO, FAA, drone, El Al, Ryanair, Wizz Air, Lufthansa, easyJet, Emirates, plane crash, emergency landing, GPS jamming, GPS spoofing, TCAS, NOTAM, Flightradar, טיסה, טיסות, תעופה, מטוס, מטוסים, טייס, טייסים, נתב"ג, שדה התעופה, אל על, בקרה אווירית, בקר טיסה, בקרי טיסה, רש"ת, ארקיע, ישראייר, נחיתת חירום, רחפן, כטב"ם, מרחב אווירי',
+  tech:  'AI, artificial intelligence, OpenAI, Anthropic, ChatGPT, Google, Apple, Microsoft, Nvidia, Meta, iPhone, Android, chip, semiconductor, startup, cyber, cyberattack, hacker, hackers, software, בינה מלאכותית, סטארטאפ, סייבר, אפל, גוגל, מיקרוסופט, אנבידיה, אפליקציה, הייטק',
+  sport: 'football, soccer, NBA, NFL, Champions League, Premier League, Euroleague, Maccabi, Hapoel, Olympic, Olympics, tennis, Formula 1, F1, World Cup, כדורגל, כדורסל, מכבי, הפועל, בית"ר, ליגת האלופות, יורוליג, אולימפי, מונדיאל, נבחרת, שחקן',
+  econ:  'economy, economic, inflation, interest rate, stock, stocks, markets, Fed, Nasdaq, Wall Street, bitcoin, crypto, GDP, bank, IPO, tariff, tariffs, בורסה, ריבית, אינפלציה, בנק ישראל, מניות, מניה, שקל, דולר, תקציב, כלכלה, משכנתא, ביטקוין, מכסים',
+};
+
+const STOP = new Set(('the a an of to in on and for is at by with from as it its this that be are was were has have had will after over into about not no vs amid says said say new ' +
+  'של על את עם לא זה גם אל מה כי או אם יש בין אחרי לפני נגד מול אצל כל עוד רק היה היו אבל כבר הוא היא הם הן אני אתה כך כמו').split(' '));
+
+/* ============================== state ============================== */
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { console.warn('storage', e); } },
+};
+let sources  = LS.get('mv_sources', null) || DEFAULT_SOURCES.map(s => ({ ...s, on: true }));
+let keywords = LS.get('mv_keywords', null) || { ...DEFAULT_KEYWORDS };
+let settings = Object.assign({ channel: 'all', sort: 'hot', images: false, theme: 'auto', watch: '', proOnly: false, lastVisit: 0, home: 'all' }, LS.get('mv_settings', {}));
+let health   = LS.get('mv_health', {});       // id -> { ok, error, at, n }
+let items    = new Map();                     // link -> item
+let clusters = [];
+let busy = false;
+let renderLimit = 250;
+let query = '';
+const openedAt = Date.now();
+const prevVisit = settings.lastVisit || 0;
+
+// load cache
+(function loadCache(){
+  const c = LS.get('mv_cache', null);
+  if (c && Array.isArray(c.items)) {
+    for (const it of c.items) items.set(it.l, it);
+    setStamp(c.at);
+  }
+})();
+
+function saveSources(){ LS.set('mv_sources', sources); }
+function saveSettings(){ LS.set('mv_settings', settings); }
+function saveKeywords(){ LS.set('mv_keywords', keywords); }
+function saveCache(){
+  const cutoff = Date.now() - 72*3600e3;
+  const arr = [...items.values()].filter(i => (i.d || i.f) > cutoff).sort((a,b)=> (b.d||b.f)-(a.d||a.f)).slice(0, 2500)
+    .map(i => ({ t:i.t, l:i.l, d:i.d, f:i.f, s:i.s, sn:i.sn, img:i.img, desc:(i.desc||'').slice(0,160) }));
+  LS.set('mv_cache', { at: Date.now(), items: arr });
+  LS.set('mv_health', health);
+}
+
+/* ============================== helpers ============================== */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('on'),2200); }
+function setStamp(at){ $('stamp').textContent = at ? 'עודכן ' + ago(at) : ''; }
+function ago(t){
+  const m = Math.max(0, Math.round((Date.now()-t)/60000));
+  if (m < 1) return 'עכשיו';
+  if (m < 60) return 'לפני ' + m + ' דק\'';
+  const h = Math.round(m/60);
+  if (h === 1) return 'לפני שעה';
+  if (h === 2) return 'לפני שעתיים';
+  if (h < 24) return 'לפני ' + h + ' שעות';
+  const d = Math.round(h/24);
+  return d === 1 ? 'אתמול' : 'לפני ' + d + ' ימים';
+}
+function srcById(id){ return sources.find(s => s.id === id); }
+function chanName(id){ const c = CHANNELS.find(c=>c.id===id); return c ? c.name : id; }
+
+/* keyword matching */
+let kwCache = {};
+function compileKeywords(){
+  kwCache = {};
+  for (const ch of Object.keys(keywords)) {
+    const terms = String(keywords[ch]||'').split(/[,\n]/).map(s=>s.trim()).filter(Boolean);
+    const lat = [], heb = [];
+    for (const t of terms) (/[\u0590-\u05FF]/.test(t) ? heb : lat).push(t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const parts = [];
+    if (lat.length) parts.push('(?:^|[^A-Za-z0-9])(?:' + lat.join('|') + ')(?=$|[^A-Za-z0-9])');
+    if (heb.length) parts.push('(?:^|[^\u0590-\u05FF])[והבלמשכ]{0,2}(?:' + heb.join('|') + ')(?=$|[^\u0590-\u05FF])');
+    kwCache[ch] = parts.length ? new RegExp(parts.join('|'), 'i') : null;
+  }
+}
+let watchRe = null;
+function compileWatch(){
+  const terms = String(settings.watch||'').split(/[,\n]/).map(s=>s.trim()).filter(Boolean).map(t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+  watchRe = terms.length ? new RegExp('(' + terms.join('|') + ')', 'ig') : null;
+}
+function channelsOf(it){
+  const src = srcById(it.s);
+  const set = new Set();
+  if (src) set.add(src.ch);
+  const text = it.t + ' ' + (it.desc||'');
+  for (const ch in kwCache) if (kwCache[ch] && kwCache[ch].test(text)) set.add(ch);
+  return set;
+}
+
+/* clustering */
+function tokens(title){
+  return String(title).toLowerCase()
+    .replace(/["'“”‘’`.,:;!?()\[\]{}|/\\\-–—…]/g, ' ')
+    .split(/\s+/)
+    .map(w => (/^[\u0590-\u05FF]/.test(w) && w.length > 3 ? w.replace(/^[והבלמשכ](?=[\u0590-\u05FF]{3,})/, '') : w))
+    .filter(w => w.length > 1 && !STOP.has(w));
+}
+function buildClusters(){
+  const list = [...items.values()].filter(it => it.t);
+  list.sort((a,b) => (b.d||b.f) - (a.d||a.f));
+  const index = new Map(); // token -> [clusterIdx]
+  const out = [];
+  for (const it of list) {
+    const toks = [...new Set(tokens(it.t))];
+    it.tok = toks;
+    const cand = new Map();
+    for (const tk of toks) { const arr = index.get(tk); if (arr) for (const ci of arr) cand.set(ci, (cand.get(ci)||0)+1); }
+    let best = -1, bestScore = 0;
+    const t = it.d || it.f;
+    for (const [ci, shared] of cand) {
+      const c = out[ci];
+      if (shared < 3 && !(shared >= 2 && toks.length <= 4 && c.tok.length <= 4)) continue;
+      if (Math.abs(c.time - t) > 36*3600e3) continue;
+      const j = shared / (toks.length + c.tok.length - shared);
+      const contain = shared === Math.min(toks.length, c.tok.length);
+      const score = contain ? Math.max(j, 0.6) : j;
+      if (score >= 0.5 && score > bestScore) { bestScore = score; best = ci; }
+    }
+    if (best >= 0) {
+      const c = out[best];
+      c.items.push(it);
+      if (t > c.time) c.time = t;
+      const newToks = toks.filter(tk => !c.tokSet.has(tk));
+      for (const tk of newToks) { c.tokSet.add(tk); c.tok.push(tk); (index.get(tk) || index.set(tk, []).get(tk)).push(best); }
+    } else {
+      const ci = out.length;
+      out.push({ items:[it], time:t, first:t, tok:[...toks], tokSet:new Set(toks) });
+      for (const tk of toks) (index.get(tk) || index.set(tk, []).get(tk)).push(ci);
+    }
+  }
+  for (const c of out) {
+    c.items.sort((a,b)=> (a.d||a.f) - (b.d||b.f));
+    c.first = c.items[0].d || c.items[0].f;
+    c.chans = new Set();
+    c.srcs = new Set();
+    let pro = false;
+    for (const it of c.items) { for (const ch of channelsOf(it)) c.chans.add(ch); c.srcs.add(it.sn || (srcById(it.s)||{}).name || it.s); if ((srcById(it.s)||{}).pro) pro = true; }
+    c.n = c.srcs.size;
+    c.pro = pro;
+    c.hasPro = pro;
+    // representative: professional source in cluster if any, else earliest
+    c.rep = c.items.find(it => (srcById(it.s)||{}).pro) || c.items[0];
+    c.isNew = c.time > prevVisit;
+  }
+  clusters = out;
+}
+function hotScore(c, channel){
+  const ageH = Math.max(0, (Date.now() - c.time) / 3600e3);
+  let s = Math.pow(c.n, 0.8) / Math.pow(1 + ageH/2, 1.2);
+  if (channel === 'avi' && c.hasPro) s *= 1.3;
+  return s;
+}
+
+/* ============================== rendering ============================== */
+function renderTabs(){
+  const counts = {};
+  for (const c of clusters) { for (const ch of c.chans) counts[ch] = (counts[ch]||0)+1; counts.all = (counts.all||0)+1; }
+  $('tabs').innerHTML = CHANNELS.map(c => `<button class="tab${settings.channel===c.id?' on':''}" data-ch="${c.id}">${c.name}${counts[c.id]?`<b>${counts[c.id]}</b>`:''}</button>`).join('');
+  $('tabs').querySelectorAll('.tab').forEach(b => b.onclick = () => { settings.channel = b.dataset.ch; saveSettings(); renderLimit = 250; renderTabs(); renderList(); window.scrollTo(0,0); });
+  $('bPro').style.display = settings.channel === 'avi' ? '' : 'none';
+  $('bPro').classList.toggle('on', settings.proOnly);
+}
+function highlight(t){
+  const e = esc(t);
+  return watchRe ? e.replace(watchRe, '<mark>$1</mark>') : e;
+}
+function visibleClusters(){
+  const ch = settings.channel;
+  let list = clusters.filter(c => ch === 'all' || c.chans.has(ch));
+  if (ch === 'avi' && settings.proOnly) list = list.filter(c => c.hasPro);
+  if (query) {
+    const q = query.toLowerCase();
+    list = list.filter(c => c.items.some(it => (it.t + ' ' + (it.desc||'')).toLowerCase().includes(q)));
+  }
+  if (settings.sort === 'hot') list.sort((a,b) => hotScore(b,ch) - hotScore(a,ch));
+  else list.sort((a,b) => b.time - a.time);
+  return list;
+}
+function renderList(){
+  const list = visibleClusters();
+  const el = $('list');
+  if (!list.length) {
+    el.innerHTML = `<div class="empty"><b>${items.size ? 'אין כותרות בערוץ הזה' : 'עדיין אין כותרות'}</b>${items.size ? (query ? 'נסה חיפוש אחר' : 'נסה ערוץ אחר או רענון') : 'לחץ על רענון כדי לשאוב חדשות'}</div>`;
+    return;
+  }
+  const html = [];
+  const shown = list.slice(0, renderLimit);
+  for (const c of shown) {
+    const rep = c.rep;
+    const src = srcById(rep.s) || {};
+    const sname = rep.sn || src.name || '';
+    const hot = c.n >= 4;
+    const img = settings.images && rep.img ? `<img class="img" loading="lazy" src="${esc(rep.img)}" alt="">` : '';
+    const others = c.items.filter(it => it !== rep);
+    const more = `<div class="more">${rep.desc ? `<div class="d">${highlight(rep.desc)}</div>` : ''}${others.slice(0,30).map(it => `<a href="${esc(it.l)}" target="_blank" rel="noopener">${highlight(it.t)}<span>${esc(it.sn || (srcById(it.s)||{}).name || '')}</span></a>`).join('')}</div>`;
+    html.push(`<div class="row${settings.images && rep.img?' withimg':''}${hot?' hot':''}" data-ci="${clusters.indexOf(c)}">${img}<div class="main">
+      <a class="t" href="${esc(rep.l)}" target="_blank" rel="noopener" dir="auto">${highlight(rep.t)}</a>
+      <div class="meta">
+        ${c.isNew ? '<span class="new" title="חדש מאז הביקור הקודם"></span>' : ''}
+        <span class="src">${esc(sname)}</span>${src.pro ? '<span class="pro">מקצועי</span>' : ''}
+        <span>${ago(c.time)}</span>
+        ${c.n > 1 ? `<button class="cnt${hot?' hot':''}" data-x="open">${c.n} מקורות</button>` : (rep.desc ? '<button class="cnt" data-x="open">פרטים</button>' : '')}
+        <button class="sh" data-x="share" aria-label="שיתוף"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></button>
+      </div>${more}</div></div>`);
+  }
+  if (list.length > renderLimit) html.push(`<button class="loadmore" id="bMore">הצג עוד (${list.length - renderLimit})</button>`);
+  el.innerHTML = html.join('');
+  const bm = $('bMore'); if (bm) bm.onclick = () => { renderLimit += 250; renderList(); };
+  $('status').textContent = statusText(list.length);
+}
+function statusText(n){
+  const on = sources.filter(s=>s.on!==false).length;
+  const bad = Object.values(health).filter(h => h && h.ok === false).length;
+  return `${n} פריטים · ${on} מקורות${bad ? ' · ' + bad + ' לא מגיבים' : ''}`;
+}
+$('list').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-x]');
+  if (!b) return;
+  const row = b.closest('.row');
+  if (b.dataset.x === 'open') { row.classList.toggle('open'); return; }
+  if (b.dataset.x === 'share') {
+    const c = clusters[+row.dataset.ci]; if (!c) return;
+    const text = c.rep.t + '\n' + c.rep.l;
+    if (navigator.share) navigator.share({ title: c.rep.t, text: c.rep.t, url: c.rep.l }).catch(()=>{});
+    else window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  }
+});
+
+/* ============================== fetching ============================== */
+async function refresh(){
+  if (busy) return;
+  const active = sources.filter(s => s.on !== false);
+  if (!active.length) { toast('אין מקורות פעילים'); return; }
+  busy = true;
+  $('bRefresh').classList.add('on');
+  const prog = $('prog'); prog.classList.add('busy');
+  const chunks = [];
+  for (let i = 0; i < active.length; i += 10) chunks.push(active.slice(i, i+10));
+  let done = 0, added = 0, failed = 0;
+  const startedAt = Date.now();
+  let lastRender = 0;
+  const cutoff = Date.now() - 72*3600e3;
+
+  const worker = async () => {
+    while (chunks.length) {
+      const chunk = chunks.shift();
+      try {
+        const r = await fetch('/api/fetch', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sources: chunk.map(s => ({ id:s.id, url:s.url })) }) });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const data = await r.json();
+        for (const res of data.results || []) {
+          if (res.ok) {
+            health[res.id] = { ok:true, at: Date.now(), n: res.items.length };
+            for (const it of res.items) {
+              if (it.d && it.d < cutoff) continue;
+              if (it.d && it.d > Date.now() + 3600e3) it.d = Date.now();
+              const key = it.l;
+              const prev = items.get(key);
+              if (prev) { if (!prev.d && it.d) prev.d = it.d; continue; }
+              items.set(key, { t:it.t, l:it.l, d:it.d, f: Date.now(), s:res.id, sn:it.sn, img:it.img, desc:it.desc });
+              added++;
+            }
+          } else { health[res.id] = { ok:false, error: res.error, at: Date.now() }; failed++; }
+        }
+      } catch (e) {
+        for (const s of chunk) health[s.id] = { ok:false, error: 'Server: ' + (e.message||'error'), at: Date.now() };
+        failed += chunk.length;
+      }
+      done += chunk.length;
+      prog.querySelector('i').style.width = Math.round(100*done/active.length) + '%';
+      $('status').textContent = `מעדכן… ${done}/${active.length} מקורות`;
+      if (Date.now() - lastRender > 1500) { lastRender = Date.now(); buildClusters(); renderTabs(); renderList(); $('status').textContent = `מעדכן… ${done}/${active.length} מקורות`; }
+    }
+  };
+  await Promise.all([worker(), worker(), worker(), worker()]);
+
+  // prune old
+  for (const [k, it] of items) if ((it.d || it.f) < cutoff) items.delete(k);
+  buildClusters(); renderTabs(); renderList();
+  saveCache(); setStamp(Date.now());
+  busy = false;
+  $('bRefresh').classList.remove('on');
+  prog.classList.remove('busy'); prog.querySelector('i').style.width = '0';
+  toast(`${added} כותרות חדשות${failed ? ' · ' + failed + ' מקורות נכשלו' : ''} · ${Math.round((Date.now()-startedAt)/1000)} שנ'`);
+  if ($('sheet').classList.contains('on')) renderSources();
+}
+
+/* pull to refresh */
+(function(){
+  let y0 = null, pulling = false;
+  const pull = $('pull');
+  document.addEventListener('touchstart', e => { if (window.scrollY <= 0 && !$('sheet').classList.contains('on')) { y0 = e.touches[0].clientY; pulling = false; } else y0 = null; }, {passive:true});
+  document.addEventListener('touchmove', e => {
+    if (y0 == null) return;
+    const dy = e.touches[0].clientY - y0;
+    if (dy > 10 && window.scrollY <= 0) { pulling = true; pull.style.height = Math.min(60, dy/2) + 'px'; pull.textContent = dy > 120 ? 'שחרר לרענון' : 'משוך לרענון'; }
+  }, {passive:true});
+  document.addEventListener('touchend', e => {
+    if (pulling && parseInt(pull.style.height) >= 60) refresh();
+    pull.style.height = '0'; y0 = null; pulling = false;
+  });
+})();
+
+/* ============================== settings sheet ============================== */
+function openSheet(){ $('sheet').classList.add('on'); document.body.style.overflow='hidden'; renderSettings(); }
+function closeSheet(){ $('sheet').classList.remove('on'); document.body.style.overflow=''; settings.watch = $('watch').value; saveSettings(); compileWatch(); readKeywords(); buildClusters(); renderTabs(); renderList(); }
+function renderSettings(){
+  $('swImg').classList.toggle('on', !!settings.images);
+  $('sheet').querySelectorAll('[data-th]').forEach(b => b.classList.toggle('on', b.dataset.th === settings.theme));
+  $('selHome').innerHTML = CHANNELS.map(c => `<option value="${c.id}"${settings.home===c.id?' selected':''}>${c.name}</option>`).join('');
+  $('watch').value = settings.watch || '';
+  $('addChan').innerHTML = CHANNELS.filter(c=>c.id!=='all').map(c => `<button data-ch="${c.id}"${c.id===(addState.ch||'world')?' class="on"':''}>${c.name}</button>`).join('');
+  $('addChan').querySelectorAll('button').forEach(b => b.onclick = () => { addState.ch = b.dataset.ch; $('addChan').querySelectorAll('button').forEach(x=>x.classList.toggle('on', x===b)); });
+  renderSources();
+  $('kwList').innerHTML = CHANNELS.filter(c=>c.id!=='all').map(c => `<div class="kw"><label>${c.name}</label><textarea data-kw="${c.id}" rows="3">${esc(keywords[c.id]||'')}</textarea></div>`).join('');
+  $('ver').textContent = 'מברק ' + VERSION + ' · ' + sources.length + ' מקורות · ' + items.size + ' כותרות בזיכרון';
+}
+function readKeywords(){
+  $('kwList').querySelectorAll('textarea[data-kw]').forEach(t => keywords[t.dataset.kw] = t.value);
+  saveKeywords(); compileKeywords();
+}
+function renderSources(){
+  $('srcCount').textContent = `(${sources.filter(s=>s.on!==false).length} פעילים מתוך ${sources.length})`;
+  const groups = CHANNELS.filter(c=>c.id!=='all').map(c => {
+    const rows = sources.filter(s => s.ch === c.id).map(s => {
+      const h = health[s.id];
+      let st = '<span class="st off">לא נבדק</span>';
+      if (s.on === false) st = '<span class="st off">כבוי</span>';
+      else if (h && h.ok) st = `<span class="st ok">${h.n} · ${ago(h.at)}</span>`;
+      else if (h && h.ok === false) st = `<span class="st err" title="${esc(h.error)}">${esc((h.error||'שגיאה').slice(0,28))}</span>`;
+      return `<div class="srow" data-id="${esc(s.id)}"><div class="n"><b>${esc(s.name)}${s.pro?' <span class="pro" style="color:var(--pro);font-size:11px">מקצועי</span>':''}</b><small>${esc(s.url)}</small></div>${st}<button class="sw${s.on!==false?' on':''}" data-x="toggle" aria-label="הפעל/כבה"></button><button class="del" data-x="del" aria-label="מחק"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></div>`;
+    }).join('');
+    return rows ? `<h2 style="margin-top:14px">${c.name}</h2><div class="card">${rows}</div>` : '';
+  }).join('');
+  $('srcList').innerHTML = groups;
+}
+$('srcList').addEventListener('click', e => {
+  const b = e.target.closest('[data-x]'); if (!b) return;
+  const id = b.closest('.srow').dataset.id;
+  const s = srcById(id); if (!s) return;
+  if (b.dataset.x === 'toggle') { s.on = s.on === false; saveSources(); renderSources(); }
+  if (b.dataset.x === 'del') { if (confirm('למחוק את "' + s.name + '"?')) { sources = sources.filter(x => x.id !== id); for (const [k,it] of items) if (it.s === id) items.delete(k); saveSources(); saveCache(); renderSources(); } }
+});
+$('swImg').onclick = () => { settings.images = !settings.images; saveSettings(); $('swImg').classList.toggle('on', settings.images); };
+$('sheet').querySelectorAll('[data-th]').forEach(b => b.onclick = () => { settings.theme = b.dataset.th; saveSettings(); applyTheme(); renderSettings(); });
+$('selHome').onchange = () => { settings.home = $('selHome').value; saveSettings(); };
+function applyTheme(){ if (settings.theme === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', settings.theme); }
+
+/* add source */
+const addState = { url:'', title:'', ch:'world', pro:false };
+$('bFind').onclick = async () => {
+  const u = $('addUrl').value.trim(); if (!u) return;
+  $('bFind').disabled = true; $('found').innerHTML = '<div class="hint">מחפש…</div>';
+  try {
+    const r = await fetch('/api/discover?url=' + encodeURIComponent(u));
+    const data = await r.json();
+    if (!data.feeds || !data.feeds.length) { $('found').innerHTML = `<div class="hint">לא נמצא פיד RSS בכתובת הזו. ${data.error ? esc(data.error) + '. ' : ''}אפשר לנסות להדביק כתובת פיד ישירה, או להוסיף חיפוש Google News: <button class="btn sec2" id="bGN" style="height:32px;margin-top:6px">הוסף כחיפוש Google News</button></div>`;
+      $('bGN').onclick = () => { let host = u.replace(/^https?:\/\//,'').replace(/^www\./,'').split('/')[0]; pickFeed(GN_EN('site:' + host), host); };
+    } else {
+      $('found').innerHTML = data.feeds.map((f,i) => `<button data-i="${i}">${esc(f.title || 'פיד')}<small>${esc(f.url)}</small></button>`).join('');
+      $('found').querySelectorAll('button').forEach(b => b.onclick = () => pickFeed(data.feeds[+b.dataset.i].url, data.feeds[+b.dataset.i].title));
+    }
+  } catch (e) { $('found').innerHTML = '<div class="hint">השרת לא הגיב. נסה שוב.</div>'; }
+  $('bFind').disabled = false;
+};
+function pickFeed(url, title){
+  addState.url = url; addState.title = title;
+  $('addName').value = (title || '').replace(/\s*[-|–].*$/,'').slice(0,40) || url.replace(/^https?:\/\//,'').split('/')[0];
+  $('addForm').style.display = '';
+  $('found').innerHTML = `<div class="hint" dir="ltr" style="text-align:right">${esc(url)}</div>`;
+  $('addName').focus();
+}
+$('swAddPro').onclick = () => { addState.pro = !addState.pro; $('swAddPro').classList.toggle('on', addState.pro); };
+$('bCancelAdd').onclick = () => { $('addForm').style.display = 'none'; $('found').innerHTML = ''; };
+$('bAdd').onclick = () => {
+  const name = $('addName').value.trim() || 'מקור חדש';
+  if (!addState.url) return;
+  if (sources.some(s => s.url === addState.url)) { toast('המקור כבר קיים'); return; }
+  const id = 'u' + Date.now().toString(36);
+  sources.push({ id, name, url: addState.url, ch: addState.ch, pro: addState.pro, on: true, lang: /[\u0590-\u05FF]/.test(name) ? 'he' : 'en' });
+  saveSources(); renderSources();
+  $('addForm').style.display = 'none'; $('found').innerHTML = ''; $('addUrl').value = ''; addState.url = ''; addState.pro = false; $('swAddPro').classList.remove('on');
+  toast('נוסף: ' + name + ' — יישאב ברענון הבא');
+};
+
+/* export / import / reset */
+$('bExport').onclick = () => {
+  const data = { version: VERSION, sources, keywords, settings: { ...settings, lastVisit: 0 } };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'mivrak-settings.json'; document.body.appendChild(a); a.click(); a.remove();
+};
+$('bImport').onclick = () => $('fileImport').click();
+$('fileImport').onchange = async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    if (Array.isArray(data.sources)) sources = data.sources;
+    if (data.keywords) keywords = data.keywords;
+    if (data.settings) settings = Object.assign(settings, data.settings, { lastVisit: settings.lastVisit });
+    saveSources(); saveKeywords(); saveSettings(); compileKeywords(); compileWatch(); applyTheme(); renderSettings(); toast('ההגדרות יובאו');
+  } catch { toast('קובץ לא תקין'); }
+  e.target.value = '';
+};
+$('bReset').onclick = () => {
+  if (!confirm('לשחזר את רשימת המקורות ומילות המפתח המקוריות? מקורות שהוספת יימחקו.')) return;
+  sources = DEFAULT_SOURCES.map(s => ({ ...s, on: true })); keywords = { ...DEFAULT_KEYWORDS }; health = {};
+  saveSources(); saveKeywords(); compileKeywords(); renderSettings(); toast('שוחזר');
+};
+
+/* ============================== wiring ============================== */
+$('bSettings').onclick = openSheet;
+$('bClose').onclick = closeSheet;
+$('bRefresh').onclick = refresh;
+$('bSearch').onclick = () => { const on = $('searchBox').classList.toggle('on'); $('bSearch').classList.toggle('on', on); if (on) $('q').focus(); else { $('q').value=''; query=''; renderList(); } };
+$('q').oninput = () => { query = $('q').value.trim(); renderLimit = 250; renderList(); };
+$('sortHot').onclick = () => { settings.sort='hot'; saveSettings(); $('sortHot').classList.add('on'); $('sortNew').classList.remove('on'); renderList(); };
+$('sortNew').onclick = () => { settings.sort='new'; saveSettings(); $('sortNew').classList.add('on'); $('sortHot').classList.remove('on'); renderList(); };
+$('bPro').onclick = () => { settings.proOnly = !settings.proOnly; saveSettings(); renderTabs(); renderList(); };
+
+// boot
+applyTheme();
+compileKeywords(); compileWatch();
+settings.channel = settings.home || 'all';
+if (settings.sort === 'new') { $('sortNew').classList.add('on'); $('sortHot').classList.remove('on'); }
+buildClusters(); renderTabs(); renderList();
+settings.lastVisit = openedAt; saveSettings();
+refresh();
+</script>
+</body>
+</html>
